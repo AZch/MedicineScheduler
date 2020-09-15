@@ -13,7 +13,6 @@ import java.util.List;
 public class MedicineScheduler implements Scheduler {
 
     private final List<Task> tasks = new ArrayList<>();
-    @Listner
     private final List<Agent> agents = new ArrayList<>();
 
     @Override
