@@ -8,6 +8,7 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.lang.reflect.Field;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Stream;
 
 import static java.util.stream.Collectors.toMap;
@@ -17,7 +18,7 @@ public class InjectPropertyAnnotationObjectConfigurator implements ObjectConfigu
 
     @SneakyThrows
     public InjectPropertyAnnotationObjectConfigurator() {
-        String path = ClassLoader.getSystemClassLoader().getResource("application.properties").getPath();
+        String path = Objects.requireNonNull(ClassLoader.getSystemClassLoader().getResource("application.properties")).getPath();
         Stream<String> lines = new BufferedReader(new FileReader(path)).lines();
         propertiesMap = lines.map(line -> line.split("=")).collect(toMap(arr -> arr[0].trim(), arr -> arr[1].trim()));
     }
@@ -31,7 +32,12 @@ public class InjectPropertyAnnotationObjectConfigurator implements ObjectConfigu
             if (annotation != null) {
                 String value = annotation.value().isEmpty() ? propertiesMap.get(field.getName()) : propertiesMap.get(annotation.value());
                 field.setAccessible(true);
-                field.set(t, value);
+                Class<?> fieldType = field.getType();
+                if (fieldType == Integer.class) {
+                    field.set(t, Integer.parseInt(value));
+                } else {
+                    field.set(t, value);
+                }
             }
         }
     }
