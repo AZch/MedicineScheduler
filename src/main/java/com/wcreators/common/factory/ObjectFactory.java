@@ -3,6 +3,7 @@ package com.wcreators.common.factory;
 import com.wcreators.common.ApplicationContext;
 import com.wcreators.common.annotations.PostConstruct;
 import com.wcreators.common.configurators.object.ObjectConfigurator;
+import com.wcreators.common.configurators.proxy.ProxyConfigurator;
 import lombok.SneakyThrows;
 
 import java.lang.reflect.Method;
@@ -12,12 +13,18 @@ import java.util.List;
 public class ObjectFactory {
     private final ApplicationContext context;
     private final List<ObjectConfigurator> configurators = new ArrayList<>();
+    private final List<ProxyConfigurator> proxyConfigurators = new ArrayList<>();
 
     @SneakyThrows
     public ObjectFactory(ApplicationContext context) {
         this.context = context;
         for (Class<? extends ObjectConfigurator> aClass : context.getConfig().getScanner().getSubTypesOf(ObjectConfigurator.class)) {
             configurators.add(aClass.getDeclaredConstructor().newInstance());
+        }
+        for (Class<? extends ProxyConfigurator> aClass : context.getConfig().getScanner().getSubTypesOf(ProxyConfigurator.class)) {
+            ProxyConfigurator proxyConfigurator = aClass.getDeclaredConstructor().newInstance();
+            configure(proxyConfigurator);
+            proxyConfigurators.add(proxyConfigurator);
         }
     }
 
@@ -27,6 +34,8 @@ public class ObjectFactory {
         configure(t);
 
         invokeInit(implClass, t);
+
+        t = wrapWithProxy(implClass, t);
 
         return t;
     }
@@ -42,6 +51,14 @@ public class ObjectFactory {
 
     private <T> void configure(T t) {
         configurators.forEach(objectConfigurator -> objectConfigurator.configure(t, context));
+    }
+
+    @SuppressWarnings("unchecked")
+    private <T> T wrapWithProxy(Class<T> implClass, T t) {
+        for (ProxyConfigurator proxyConfigurator : proxyConfigurators) {
+            t = (T) proxyConfigurator.replaceWithProxy(t, implClass);
+        }
+        return t;
     }
 
     @SneakyThrows
