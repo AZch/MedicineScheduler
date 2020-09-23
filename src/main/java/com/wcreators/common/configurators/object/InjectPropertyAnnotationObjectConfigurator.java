@@ -35,6 +35,8 @@ public class InjectPropertyAnnotationObjectConfigurator implements ObjectConfigu
                 Class<?> fieldType = field.getType();
                 if (fieldType == Integer.class) {
                     field.set(t, Integer.parseInt(value));
+                } else if (fieldType == Boolean.class) {
+                    field.set(t, Boolean.valueOf(value));
                 } else {
                     field.set(t, value);
                 }

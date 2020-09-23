@@ -1,7 +1,5 @@
 package com.wcreators;
 
-import com.wcreators.agents.Agent;
-import com.wcreators.agents.TelegramAgent;
 import com.wcreators.common.Application;
 import com.wcreators.common.ApplicationContext;
 import com.wcreators.domain.scheduler.MedicineScheduler;
@@ -15,8 +13,9 @@ public class Main {
         ApiContextInitializer.init();
         ApplicationContext context = Application.run("com.wcreators", new HashMap<>());
 
-        Agent tgAgent = context.getObject(TelegramAgent.class);
-
+//        Agent tgAgent = context.getObject(TelegramAgent.class);
+//        UserDao userDao = context.getObject(UserDao.class);
+//        userDao.get().forEach(user -> System.out.println(user.toString()));
         Scheduler mScheduler = context.getObject(MedicineScheduler.class);
         mScheduler.run();
     }
