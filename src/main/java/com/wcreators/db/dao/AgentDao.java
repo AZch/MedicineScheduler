@@ -1,31 +1,31 @@
-package com.wcreators.hibernate.dao;
+package com.wcreators.db.dao;
 
 import com.wcreators.common.annotations.InjectByType;
-import com.wcreators.hibernate.entities.UserEntity;
-import com.wcreators.hibernate.util.HibernateUtil;
+import com.wcreators.db.entities.AgentEntity;
+import com.wcreators.db.util.HibernateUtil;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 
 import java.util.List;
 
-public class UserDao {
+public class AgentDao {
     @InjectByType
     HibernateUtil utils;
 
-    public List<UserEntity> get() {
+    public List<AgentEntity> get() {
         Session session = utils.getSessionFactory().openSession();
         session.beginTransaction();
-        List<UserEntity> users = session.createQuery("from UserEntity ", UserEntity.class).list();
+        List<AgentEntity> agents = session.createQuery("from AgentEntity", AgentEntity.class).list();
         session.getTransaction().commit();
         session.close();
-        return users;
+        return agents;
     }
 
-    public void save(UserEntity user) {
+    public void create(AgentEntity agent) {
         Transaction transaction = null;
         try (Session session = utils.getSessionFactory().openSession()) {
             transaction = session.beginTransaction();
-            session.save(user);
+            session.save(agent);
             transaction.commit();
         } catch (Exception e) {
             e.printStackTrace();
