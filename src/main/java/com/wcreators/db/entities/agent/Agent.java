@@ -1,10 +1,10 @@
-package com.wcreators.db.entities;
+package com.wcreators.db.entities.agent;
 
+import com.wcreators.db.entities.User;
 import lombok.*;
 
 import javax.persistence.*;
 import java.util.Objects;
-import java.util.Set;
 import java.util.UUID;
 
 
@@ -12,7 +12,8 @@ import java.util.UUID;
 @Table(name = "Agent")
 @ToString
 @NoArgsConstructor
-public class AgentEntity {
+@AllArgsConstructor
+public class Agent {
     @Id
     @GeneratedValue
     @Column(name = "id", nullable = false)
@@ -28,17 +29,17 @@ public class AgentEntity {
     @Getter
     private AgentType agentType;
 
-    @Column(name = "agentId", nullable = false, length = 100)
+    @Column(name = "agentId", unique = true, nullable = false)
     @Basic
     @Setter
     @Getter
-    private String agentId;
+    private Long agentId;
 
-    @ManyToMany(mappedBy = "agents")
+    @ManyToOne(fetch = FetchType.LAZY)
     @Setter
     @Getter
     @Singular
-    private Set<UserEntity> users;
+    private User user;
 
     @Override
     public boolean equals(Object obj) {
@@ -48,7 +49,7 @@ public class AgentEntity {
         if (obj == null || getClass() != obj.getClass()) {
             return false;
         }
-        AgentEntity that = (AgentEntity) obj;
+        Agent that = (Agent) obj;
         return agentType == that.agentType &&
                 Objects.equals(id, that.id) &&
                 Objects.equals(agentId, that.agentId);

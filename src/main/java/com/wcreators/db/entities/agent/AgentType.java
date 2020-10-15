@@ -1,4 +1,4 @@
-package com.wcreators.db.entities;
+package com.wcreators.db.entities.agent;
 
 public enum AgentType {
     telegram,
