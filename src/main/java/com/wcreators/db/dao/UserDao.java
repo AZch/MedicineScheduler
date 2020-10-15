@@ -7,6 +7,7 @@ import org.hibernate.Session;
 import org.hibernate.Transaction;
 import java.util.List;
 
+// TODO check if this access to another connections if singleton
 public class UserDao {
     @InjectByType
     HibernateUtil utils;
