@@ -8,10 +8,12 @@ import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.schema.TargetType;
 
 import java.io.File;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.EnumSet;
 
 public class GenerateSchema {
-    private static final String SCRIPT_FILE = "./src/main/resources/migrations/";
+    private static final String SCRIPT_FILE = "./src/main/resources/schema/";
 
     private SchemaExport getSchemaExport(String schemaName) {
 
@@ -55,7 +57,10 @@ public class GenerateSchema {
 
     }
 
-    public void generate(String schemaName) {
+    public void generate() {
+        SimpleDateFormat formatter = new SimpleDateFormat("MM.dd.yyyy_hh:mm:ss");
+        Date date = new Date();
+        String schemaName = "schema_script_" + formatter.format(date) + ".sql";
         ServiceRegistry serviceRegistry = new StandardServiceRegistryBuilder().configure().build();
 
         // Create a metadata sources using the specified service registry.
