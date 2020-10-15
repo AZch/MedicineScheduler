@@ -1,6 +1,7 @@
 package com.wcreators.common.factory;
 
 import com.wcreators.common.ApplicationContext;
+import com.wcreators.common.annotations.PostInit;
 import com.wcreators.common.annotations.PostConstruct;
 import com.wcreators.common.configurators.object.ObjectConfigurator;
 import com.wcreators.common.configurators.proxy.ProxyConfigurator;
@@ -19,12 +20,32 @@ public class ObjectFactory {
     public ObjectFactory(ApplicationContext context) {
         this.context = context;
         for (Class<? extends ObjectConfigurator> aClass : context.getConfig().getScanner().getSubTypesOf(ObjectConfigurator.class)) {
-            configurators.add(aClass.getDeclaredConstructor().newInstance());
+            if (!aClass.isAnnotationPresent(PostInit.class)) {
+                configurators.add(aClass.getDeclaredConstructor().newInstance());
+            }
         }
         for (Class<? extends ProxyConfigurator> aClass : context.getConfig().getScanner().getSubTypesOf(ProxyConfigurator.class)) {
-            ProxyConfigurator proxyConfigurator = aClass.getDeclaredConstructor().newInstance();
-            configure(proxyConfigurator);
-            proxyConfigurators.add(proxyConfigurator);
+            if (!aClass.isAnnotationPresent(PostInit.class)) {
+                ProxyConfigurator proxyConfigurator = aClass.getDeclaredConstructor().newInstance();
+                configure(proxyConfigurator);
+                proxyConfigurators.add(proxyConfigurator);
+            }
+        }
+    }
+
+    @SneakyThrows
+    public void postInit() {
+        for (Class<? extends ObjectConfigurator> aClass : context.getConfig().getScanner().getSubTypesOf(ObjectConfigurator.class)) {
+            if (aClass.isAnnotationPresent(PostInit.class)) {
+                configurators.add(aClass.getDeclaredConstructor(ApplicationContext.class).newInstance(context));
+            }
+        }
+        for (Class<? extends ProxyConfigurator> aClass : context.getConfig().getScanner().getSubTypesOf(ProxyConfigurator.class)) {
+            if (aClass.isAnnotationPresent(PostInit.class)) {
+                ProxyConfigurator proxyConfigurator = aClass.getDeclaredConstructor(ApplicationContext.class).newInstance(context);
+                configure(proxyConfigurator);
+                proxyConfigurators.add(proxyConfigurator);
+            }
         }
     }
 
