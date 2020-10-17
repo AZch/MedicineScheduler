@@ -3,11 +3,10 @@ package com.wcreators.db.dao;
 import com.wcreators.common.annotations.InjectByType;
 import com.wcreators.db.entities.userMedicine.UserMedicine;
 import com.wcreators.db.util.HibernateUtil;
-import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.proxy.HibernateProxy;
 
+import java.time.LocalTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -37,8 +36,8 @@ public class UserMedicineDao {
         session.getTransaction().commit();
         session.close();
         return userMedicines.stream().peek(userMedicine -> {
-            userMedicine.setUser(initializeAndUnproxy(userMedicine.getUser()));
-            userMedicine.setMedicine(initializeAndUnproxy(userMedicine.getMedicine()));
+            userMedicine.setUser(utils.initializeAndUnproxy(userMedicine.getUser()));
+            userMedicine.setMedicine(utils.initializeAndUnproxy(userMedicine.getMedicine()));
         }).collect(Collectors.toList());
     }
 
