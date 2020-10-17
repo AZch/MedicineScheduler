@@ -10,8 +10,8 @@ public class Application {
         JavaConfig config = new JavaConfig(packageToScan, ifc2ImplClass);
         ApplicationContext context = new ApplicationContext(config);
         ObjectFactory factory = new ObjectFactory(context);
-        // TODO init all singletons
         context.setFactory(factory);
+        // TODO init all singletons
         return context;
     }
 }

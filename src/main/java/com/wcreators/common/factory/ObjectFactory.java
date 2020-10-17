@@ -1,6 +1,7 @@
 package com.wcreators.common.factory;
 
 import com.wcreators.common.ApplicationContext;
+import com.wcreators.common.annotations.PostInit;
 import com.wcreators.common.annotations.PostConstruct;
 import com.wcreators.common.configurators.object.ObjectConfigurator;
 import com.wcreators.common.configurators.proxy.ProxyConfigurator;

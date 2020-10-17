@@ -11,9 +11,11 @@ public class InjectByTypeAnnotationObjectConfigurator implements ObjectConfigura
     @SneakyThrows
     public void configure(Object t, ApplicationContext context) {
      for (Field field : t.getClass().getDeclaredFields()) {
-         if (field.isAnnotationPresent(InjectByType.class)) {
+         InjectByType annotation = field.getAnnotation(InjectByType.class);
+         if (annotation != null) {
              field.setAccessible(true);
-             Object object = context.getObject(field.getType());
+             Class<?> objectType = annotation.value() == Object.class ? field.getType() : annotation.value();
+             Object object = context.getObject(objectType);
              field.set(t, object);
          }
      }
