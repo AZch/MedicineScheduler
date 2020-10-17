@@ -21,6 +21,7 @@ public class MedicineScheduler implements Scheduler {
 
     private final List<ExternalAgent> externalAgents = new ArrayList<>();
 
+    // TODO concurency
     private final List<Task> tasks = new ArrayList<>();
 
     @PostConstruct
@@ -52,6 +53,7 @@ public class MedicineScheduler implements Scheduler {
         if (tasks.stream().noneMatch(existTask -> existTask.equals(task))) {
             System.out.println("added " + task.toString());
             tasks.add(task);
+            // TODO send event here
         } else {
             System.out.println("already added");
         }

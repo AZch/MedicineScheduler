@@ -1,11 +1,12 @@
 package com.wcreators.db.dao;
 
 import com.wcreators.common.annotations.InjectByType;
-import com.wcreators.common.annotations.Singleton;
 import com.wcreators.db.entities.userMedicine.UserMedicine;
 import com.wcreators.db.util.HibernateUtil;
+import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.proxy.HibernateProxy;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -21,20 +22,24 @@ public class UserMedicineDao {
                 "SELECT DISTINCT UM " +
                 "FROM UserMedicine AS UM " +
                 "JOIN FETCH UM.executionTimes ET " +
-                "JOIN FETCH UM.pk.user u " +
-                "JOIN FETCH u.agents " +
-                "JOIN FETCH UM.pk.medicine m " +
-                "WHERE u.userId != NULL AND m.medicineId != NULL"/* AND ET > :etMore AND ET < :etLess"*/, UserMedicine.class)
-//                .setParameter("etMore", LocalTime.now().toSecondOfDay() + 1)
-//                .setParameter("etLess", LocalTime.now().toSecondOfDay() + 60)
-                .list()
-                .stream()
-                .filter(userMedicine -> userMedicine.getUser() != null && userMedicine.getMedicine() != null)
-                .collect(Collectors.toList());
-
+                "JOIN FETCH UM.pk.user U " +
+                "JOIN FETCH U.agents " +
+                "JOIN FETCH UM.pk.medicine M " +
+                "WHERE U.userId != NULL AND M.medicineId != NULL " +
+                        "AND ET > :etMore AND ET < :etLess"
+                , UserMedicine.class)
+                .setParameter("etMore", LocalTime.now().toSecondOfDay() - seconds)
+                .setParameter("etLess", LocalTime.now().toSecondOfDay() + seconds)
+                .getResultList(); // TODO what different between this and list()?
+        System.out.println(LocalTime.now().toSecondOfDay() - seconds);
+        System.out.println(LocalTime.now().toSecondOfDay() + seconds);
+        System.out.println(userMedicines.size());
         session.getTransaction().commit();
         session.close();
-        return userMedicines;
+        return userMedicines.stream().peek(userMedicine -> {
+            userMedicine.setUser(initializeAndUnproxy(userMedicine.getUser()));
+            userMedicine.setMedicine(initializeAndUnproxy(userMedicine.getMedicine()));
+        }).collect(Collectors.toList());
     }
 
     public void create(UserMedicine userMedicine) {
