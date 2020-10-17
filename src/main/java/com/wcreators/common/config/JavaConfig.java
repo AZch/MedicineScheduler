@@ -8,8 +8,8 @@ import java.util.Set;
 
 public class JavaConfig implements Config {
     @Getter
-    private Reflections scanner;
-    private Map<Class, Class> ifc2ImplClass;
+    private final Reflections scanner;
+    private final Map<Class, Class> ifc2ImplClass;
 
     public JavaConfig(String packageToScan, Map<Class, Class> ifc2ImplClass) {
         this.ifc2ImplClass = ifc2ImplClass;
@@ -25,10 +25,5 @@ public class JavaConfig implements Config {
 
             return classes.iterator().next();
         });
-    }
-
-    @Override
-    public Reflections getScanner() {
-        return scanner;
     }
 }
