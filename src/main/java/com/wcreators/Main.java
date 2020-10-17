@@ -15,8 +15,8 @@ public class Main {
         ApiContextInitializer.init();
         ApplicationContext context = Application.run("com.wcreators", new HashMap<>());
 
-        Scheduler eScheduler = context.getObject(EventScheduler.class);
         Scheduler mScheduler = context.getObject(MedicineScheduler.class);
+        Scheduler eScheduler = context.getObject(EventScheduler.class);
         mScheduler.run();
         eScheduler.run();
     }

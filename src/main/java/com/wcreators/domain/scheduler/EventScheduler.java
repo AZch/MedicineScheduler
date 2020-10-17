@@ -1,7 +1,6 @@
 package com.wcreators.domain.scheduler;
 
 import com.wcreators.common.annotations.*;
-import com.wcreators.common.annotations.eventSchedulers.EventSchedulers;
 import com.wcreators.common.annotations.scheduling.EnableScheduling;
 import com.wcreators.common.annotations.scheduling.Scheduled;
 import com.wcreators.db.dao.UserMedicineDao;
@@ -16,13 +15,20 @@ import java.util.List;
 @Singleton
 public class EventScheduler implements Scheduler {
     @InjectByType
-    UserMedicineDao userMedicineDao;
+    private UserMedicineDao userMedicineDao;
+
+    @InjectByType(MedicineScheduler.class)
+    private Scheduler medicineScheduler;
 
     @InjectProperty("SCHEDULE_INTERVAL")
     private Integer interval;
 
-    @EventSchedulers
     private final List<Scheduler> schedulers = new ArrayList<>();
+
+    @PostConstruct
+    public void init() {
+        schedulers.add(medicineScheduler);
+    }
 
     @SneakyThrows
     @Scheduled

@@ -11,7 +11,6 @@ public class Application {
         ApplicationContext context = new ApplicationContext(config);
         ObjectFactory factory = new ObjectFactory(context);
         context.setFactory(factory);
-        factory.postInit();
         // TODO init all singletons
         return context;
     }

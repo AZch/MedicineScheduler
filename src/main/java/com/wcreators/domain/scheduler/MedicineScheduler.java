@@ -1,11 +1,11 @@
 package com.wcreators.domain.scheduler;
 
 import com.wcreators.common.annotations.eventSchedulers.UsingEventSheduler;
-import com.wcreators.common.annotations.externalAgents.ExternalAgnts;
 import com.wcreators.common.annotations.scheduling.EnableScheduling;
 import com.wcreators.common.annotations.scheduling.Scheduled;
 import com.wcreators.externalAgent.ExternalAgent;
 import com.wcreators.common.annotations.*;
+import com.wcreators.externalAgent.TelegramExternalAgent;
 import com.wcreators.task.Task;
 
 import java.util.ArrayList;
@@ -16,10 +16,17 @@ import java.util.List;
 @UsingEventSheduler
 public class MedicineScheduler implements Scheduler {
 
-    @ExternalAgnts
+    @InjectByType(TelegramExternalAgent.class)
+    private ExternalAgent externalAgent;
+
     private final List<ExternalAgent> externalAgents = new ArrayList<>();
 
     private final List<Task> tasks = new ArrayList<>();
+
+    @PostConstruct
+    public void init() {
+        externalAgents.add(externalAgent);
+    }
 
     @Scheduled
     @Override

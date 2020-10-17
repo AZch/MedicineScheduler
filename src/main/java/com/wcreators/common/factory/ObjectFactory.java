@@ -20,32 +20,12 @@ public class ObjectFactory {
     public ObjectFactory(ApplicationContext context) {
         this.context = context;
         for (Class<? extends ObjectConfigurator> aClass : context.getConfig().getScanner().getSubTypesOf(ObjectConfigurator.class)) {
-            if (!aClass.isAnnotationPresent(PostInit.class)) {
-                configurators.add(aClass.getDeclaredConstructor().newInstance());
-            }
+            configurators.add(aClass.getDeclaredConstructor().newInstance());
         }
         for (Class<? extends ProxyConfigurator> aClass : context.getConfig().getScanner().getSubTypesOf(ProxyConfigurator.class)) {
-            if (!aClass.isAnnotationPresent(PostInit.class)) {
-                ProxyConfigurator proxyConfigurator = aClass.getDeclaredConstructor().newInstance();
-                configure(proxyConfigurator);
-                proxyConfigurators.add(proxyConfigurator);
-            }
-        }
-    }
-
-    @SneakyThrows
-    public void postInit() {
-        for (Class<? extends ObjectConfigurator> aClass : context.getConfig().getScanner().getSubTypesOf(ObjectConfigurator.class)) {
-            if (aClass.isAnnotationPresent(PostInit.class)) {
-                configurators.add(aClass.getDeclaredConstructor(ApplicationContext.class).newInstance(context));
-            }
-        }
-        for (Class<? extends ProxyConfigurator> aClass : context.getConfig().getScanner().getSubTypesOf(ProxyConfigurator.class)) {
-            if (aClass.isAnnotationPresent(PostInit.class)) {
-                ProxyConfigurator proxyConfigurator = aClass.getDeclaredConstructor(ApplicationContext.class).newInstance(context);
-                configure(proxyConfigurator);
-                proxyConfigurators.add(proxyConfigurator);
-            }
+            ProxyConfigurator proxyConfigurator = aClass.getDeclaredConstructor().newInstance();
+            configure(proxyConfigurator);
+            proxyConfigurators.add(proxyConfigurator);
         }
     }
 
