@@ -5,4 +5,5 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 @Retention(RUNTIME)
 public @interface InjectByType {
+    Class<?> value() default Object.class;
 }

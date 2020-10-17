@@ -1,0 +1,17 @@
+drop table if exists Agent;
+drop table if exists ExecutionTimes;
+drop table if exists Medicine;
+drop table if exists User;
+drop table if exists UserMedicine;
+create table Agent (id binary(255) not null, agentId bigint not null, agentType integer not null, user_userId binary(255), primary key (id)) engine=MyISAM;
+create table ExecutionTimes (UserMedicine_medicineId binary(255) not null, UserMedicine_userId binary(255) not null, executionTime integer) engine=MyISAM;
+create table Medicine (medicineId binary(255) not null, title varchar(256) not null, primary key (medicineId)) engine=MyISAM;
+create table User (userId binary(255) not null, email varchar(256) not null, firstName varchar(100) not null, lastName varchar(100) not null, primary key (userId)) engine=MyISAM;
+create table UserMedicine (executionType integer, notifyEveryMinutes integer, userId binary(255) not null, medicineId binary(255) not null, primary key (medicineId, userId)) engine=MyISAM;
+alter table Agent add constraint UK_1i2w4cwyfo7549vlps5a4kv59 unique (agentId);
+alter table Medicine add constraint UK_da33danj1tr1k3y3nlwahcnxi unique (title);
+alter table User add constraint UK_e6gkqunxajvyxl5uctpl2vl2p unique (email);
+alter table Agent add constraint FK7w256damdhhakrsskuvxt5pto foreign key (user_userId) references User (userId);
+alter table ExecutionTimes add constraint FKpurq9mkvi28kjku5xcfh0daj7 foreign key (UserMedicine_medicineId, UserMedicine_userId) references UserMedicine (medicineId, userId);
+alter table UserMedicine add constraint FKs6mutwu5di709b3spbrk4r5sk foreign key (userId) references User (userId);
+alter table UserMedicine add constraint FKshncyou310epy8vptyb3q66vl foreign key (medicineId) references Medicine (medicineId);

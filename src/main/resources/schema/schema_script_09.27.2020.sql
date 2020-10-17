@@ -1,0 +1,11 @@
+create table Agent (id binary(255) not null, agentId varchar(100) not null, agentType integer not null, primary key (id)) engine=InnoDB;
+create table Medicine (id binary(255) not null, title varchar(256) not null, primary key (id)) engine=InnoDB;
+create table User (id binary(255) not null, email varchar(256) not null, firstName varchar(100) not null, lastName varchar(100) not null, password varchar(100), primary key (id)) engine=InnoDB;
+create table User_Agent (user_id binary(255) not null, agent_id binary(255) not null, primary key (user_id, agent_id)) engine=InnoDB;
+create table User_Medicine (user_id binary(255) not null, medicine_id binary(255) not null, primary key (user_id, medicine_id)) engine=InnoDB;
+alter table Medicine add constraint UK_da33danj1tr1k3y3nlwahcnxi unique (title);
+alter table User add constraint UK_e6gkqunxajvyxl5uctpl2vl2p unique (email);
+alter table User_Agent add constraint FKo1obqbpbtjbvtgt1dp1nspg7r foreign key (agent_id) references Agent (id);
+alter table User_Agent add constraint FK205rlftb701yoysckt4l3hugc foreign key (user_id) references User (id);
+alter table User_Medicine add constraint FKro2vil1y7822c1uifvoj97yxe foreign key (medicine_id) references Medicine (id);
+alter table User_Medicine add constraint FK3oy0mbgsa20lgmivtcrwexbuw foreign key (user_id) references User (id);

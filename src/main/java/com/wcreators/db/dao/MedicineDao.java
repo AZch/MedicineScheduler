@@ -1,31 +1,31 @@
-package com.wcreators.hibernate.dao;
+package com.wcreators.db.dao;
 
 import com.wcreators.common.annotations.InjectByType;
-import com.wcreators.hibernate.entities.UserEntity;
-import com.wcreators.hibernate.util.HibernateUtil;
+import com.wcreators.db.entities.Medicine;
+import com.wcreators.db.util.HibernateUtil;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 
 import java.util.List;
 
-public class UserDao {
+public class MedicineDao {
     @InjectByType
     HibernateUtil utils;
 
-    public List<UserEntity> get() {
+    public List<Medicine> get() {
         Session session = utils.getSessionFactory().openSession();
         session.beginTransaction();
-        List<UserEntity> users = session.createQuery("from UserEntity ", UserEntity.class).list();
+        List<Medicine> medicines = session.createQuery("from Medicine", Medicine.class).list();
         session.getTransaction().commit();
         session.close();
-        return users;
+        return medicines;
     }
 
-    public void save(UserEntity user) {
+    public void create(Medicine medicine) {
         Transaction transaction = null;
         try (Session session = utils.getSessionFactory().openSession()) {
             transaction = session.beginTransaction();
-            session.save(user);
+            session.save(medicine);
             transaction.commit();
         } catch (Exception e) {
             e.printStackTrace();

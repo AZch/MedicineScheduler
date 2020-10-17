@@ -1,4 +1,4 @@
-package com.wcreators.hibernate.util;
+package com.wcreators.db.util;
 
 import com.wcreators.common.annotations.PostConstruct;
 import com.wcreators.common.annotations.Singleton;

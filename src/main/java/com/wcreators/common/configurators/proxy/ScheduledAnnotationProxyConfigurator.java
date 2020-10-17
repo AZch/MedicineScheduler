@@ -1,8 +1,8 @@
 package com.wcreators.common.configurators.proxy;
 
-import com.wcreators.common.annotations.EnableScheduling;
+import com.wcreators.common.annotations.scheduling.EnableScheduling;
 import com.wcreators.common.annotations.InjectProperty;
-import com.wcreators.common.annotations.Scheduled;
+import com.wcreators.common.annotations.scheduling.Scheduled;
 import com.wcreators.common.annotations.Singleton;
 import lombok.SneakyThrows;
 import net.sf.cglib.proxy.Enhancer;
@@ -40,7 +40,7 @@ public class ScheduledAnnotationProxyConfigurator implements ProxyConfigurator {
 
     @SneakyThrows
     private Object getInvocationHandler(Method method, Object[] args, Object t) {
-        Method classMethod = t.getClass().getMethod(method.getName());
+        Method classMethod = t.getClass().getMethod(method.getName(), method.getParameterTypes());
         boolean isMethodHaveScheduledAnnotation = classMethod.isAnnotationPresent(Scheduled.class);
         if (isMethodHaveScheduledAnnotation) {
             ScheduledExecutorService executor = Executors.newScheduledThreadPool(1);
