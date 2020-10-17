@@ -37,13 +37,19 @@ public class UserDao {
     public User getByEmail(String email) {
         Session session = utils.getSessionFactory().openSession();
         session.beginTransaction();
-        User user = session.createQuery("from User where email = :email", User.class)
-                .setParameter("email", email)
-                .getSingleResult();
+        // TODO wrap all methods
+        try {
+            User user = session.createQuery("from User where email = :email", User.class)
+                    .setParameter("email", email)
+                    .getSingleResult();
 
-        session.getTransaction().commit();
-        session.close();
-        return user;
+            session.getTransaction().commit();
+            session.close();
+            return user;
+        } catch (Exception e) {
+            return null;
+        }
+
     }
 
     public boolean create(User user) {

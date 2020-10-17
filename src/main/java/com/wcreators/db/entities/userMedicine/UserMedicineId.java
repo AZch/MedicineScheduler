@@ -16,7 +16,6 @@ import java.util.Objects;
 public class UserMedicineId implements Serializable {
     @ManyToOne(fetch = FetchType.LAZY, targetEntity = User.class)
     @JoinColumn(referencedColumnName = "userId")
-    @NotFound(action = NotFoundAction.IGNORE)
     @Setter
     @Getter
     @Singular
@@ -24,7 +23,6 @@ public class UserMedicineId implements Serializable {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(referencedColumnName = "medicineId")
-    @NotFound(action = NotFoundAction.IGNORE)
     @Setter
     @Getter
     @Singular
@@ -40,7 +38,7 @@ public class UserMedicineId implements Serializable {
 
         UserMedicineId that = (UserMedicineId) o;
 
-        return Objects.equals(user, that.user) && Objects.equals(medicine, that.medicine);
+        return user.equals(that.user) && medicine.equals(that.medicine);
     }
 
     public int hashCode() {
