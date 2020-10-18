@@ -82,6 +82,32 @@ public class MedicineDao {
         }
     }
 
+    public Medicine getMedicineByTitleAgent(String title, AgentType type, Long agentId) {
+        try {
+            Session session = utils.getSessionFactory().openSession();
+            session.beginTransaction();
+
+            Medicine medicine = session.createQuery("" +
+                    "SELECT DISTINCT M FROM Medicine AS M " +
+                    "JOIN FETCH M.userMedicines AS UM " +
+                    "JOIN FETCH UM.executionTimes " +
+                    "JOIN FETCH UM.pk.user AS U " +
+                    "JOIN fetch U.agents A " +
+                    "WHERE M.title = :title AND A.agentType = :type AND A.agentId = :agentId", Medicine.class)
+                    .setParameter("title", title)
+                    .setParameter("type", type)
+                    .setParameter("agentId", agentId)
+                    .getSingleResult();
+
+            session.getTransaction().commit();
+            session.close();
+            return utils.initializeAndUnproxy(medicine);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
     public List<Medicine> getMedicineListByUserAgent(AgentType type, Long agentId) {
         try {
             Session session = utils.getSessionFactory().openSession();
@@ -104,6 +130,20 @@ public class MedicineDao {
         } catch (Exception e) {
             e.printStackTrace();
             return new ArrayList<>();
+        }
+    }
+
+    public void update(Medicine medicine) {
+        try {
+            Session session = utils.getSessionFactory().openSession();
+            session.beginTransaction();
+
+            session.update(medicine);
+
+            session.getTransaction().commit();
+            session.close();
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 }

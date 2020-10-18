@@ -53,6 +53,8 @@ public class TelegramExternalAgent extends TelegramLongPollingBot implements Ext
     @InjectByType
     private UserMedicineDao userMedicineDao;
 
+    private final DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("HH:mm");
+
     private final Function<String, String> makeSelectCallbackData = title -> "/select\n" + title;
     private final Function<String, String> makeEditCallbackData = title -> "/edit\n" + title;
     private final Function<String, String> makeDeleteCallbackData = title -> "/delete\n" + title;
@@ -147,12 +149,9 @@ public class TelegramExternalAgent extends TelegramLongPollingBot implements Ext
                 case "/all":
                     message.setText(allText()).setReplyMarkup(allReplayMarkup(chatId));
                     break;
-//                case "/edit":
-//                    message.setText(edit(chatId, arguments));
-//                    break;
-//                case "/del":
-//                    message.setText(del(chatId, arguments));
-//                    break;
+                case "/edit":
+                    message.setText(edit(chatId, arguments));
+                    break;
                 default:
                     message.setText("Sorry, command not exist");
             }
@@ -260,6 +259,37 @@ public class TelegramExternalAgent extends TelegramLongPollingBot implements Ext
         }
     }
 
+    private String edit(Long chatId, String[] args) {
+        // 1 - old medicine name
+        // 2 - new medicine name
+        // 3 - new time executions
+        // 4 - notify every
+        if (args.length != 5) {
+            return "Not enough data";
+        }
+        String oldMedicineTitle = args[1];
+        Medicine medicine = medicineDao.getMedicineByTitleAgent(oldMedicineTitle, AgentType.telegram, chatId);
+        if (medicine.getUserMedicines().size() != 1) {
+            return "too much relations";
+        }
+        String newMedicineTitle = args[2];
+        List<Integer> times = Arrays.stream(args[3].split(" ")).map(time -> LocalTime.parse(time, dateTimeFormatter).toSecondOfDay()).collect(Collectors.toList());
+        Integer notifyEvery = Integer.parseInt(args[4]);
+        if (!oldMedicineTitle.equals(newMedicineTitle)) {
+            medicineDao.delete(oldMedicineTitle, chatId, AgentType.telegram);
+            String[] argsAdd = new String[] {"/add", newMedicineTitle, args[3], "ed", args[4]};
+            add(chatId, argsAdd);
+        } else {
+            medicine.getUserMedicines().iterator().next().setExecutionTimes(times);
+            medicine.getUserMedicines().iterator().next().setNotifyEveryMinutes(notifyEvery);
+
+            medicineDao.update(medicine);
+
+        }
+
+        return "Ok Boss";
+    }
+
     private String add(Long chatId, String[] args) {
         // 1 - title
         // 2 - times
@@ -272,7 +302,6 @@ public class TelegramExternalAgent extends TelegramLongPollingBot implements Ext
         try {
             User user = agentDao.getUserByAgent(chatId);
 
-            DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("HH:mm");
             String title = args[1];
             List<Integer> times = Arrays.stream(args[2].split(" ")).map(time -> LocalTime.parse(time, dateTimeFormatter).toSecondOfDay()).collect(Collectors.toList());
             ExecutionType executionType = getExecutionTypeFromString(args[3]);
