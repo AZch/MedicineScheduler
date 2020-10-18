@@ -171,8 +171,11 @@ public class TelegramExternalAgent extends TelegramLongPollingBot implements Ext
                     row.add(new InlineKeyboardButton().setText("Edit").setCallbackData(makeEditCallbackData.apply(arguments[1])));
                     row.add(new InlineKeyboardButton().setText("Delete").setCallbackData(makeDeleteCallbackData.apply(arguments[1])));
                     rows.add(row);
+                    Medicine medicine = medicineDao.getMedicineByTitleAgent(arguments[1], AgentType.telegram, chatId);
                     message
-                        .setText("Selected: " + arguments[1])
+                        .setText("Selected:" +
+                                "\nName: " + arguments[1] +
+                                "\n" + medicine.getUserMedicines().iterator().next().toString())
                         .setReplyMarkup(new InlineKeyboardMarkup().setKeyboard(rows));
                     break;
                 case "/edit":
@@ -293,9 +296,8 @@ public class TelegramExternalAgent extends TelegramLongPollingBot implements Ext
     private String add(Long chatId, String[] args) {
         // 1 - title
         // 2 - times
-        // 3 - execution type
-        // 4 - notify every
-        if (args.length != 5) {
+        // 3 - notify every
+        if (args.length != 4) {
             return "Not enough data";
         }
 
@@ -304,8 +306,8 @@ public class TelegramExternalAgent extends TelegramLongPollingBot implements Ext
 
             String title = args[1];
             List<Integer> times = Arrays.stream(args[2].split(" ")).map(time -> LocalTime.parse(time, dateTimeFormatter).toSecondOfDay()).collect(Collectors.toList());
-            ExecutionType executionType = getExecutionTypeFromString(args[3]);
-            int notifyEveryMinutes = Integer.parseInt(args[4]);
+            ExecutionType executionType = getExecutionTypeFromString("ed");
+            int notifyEveryMinutes = Integer.parseInt(args[3]);
 
             return addMedicine(user, title, times, executionType, notifyEveryMinutes) ? "Success" : "Failure";
         } catch (Exception e) {

@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import javax.persistence.*;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -58,6 +59,15 @@ public class UserMedicine {
         getPk().setMedicine(medicine);
     }
 
+    @Override
+    public String toString() {
+        String executionTimesString = executionTimes
+                .stream()
+                .map(executionTime -> LocalTime.ofSecondOfDay(executionTime).toString())
+                .collect(Collectors.joining(" "));
+        return "Times: " + executionTimesString +
+                "\nNotify Every: " + notifyEveryMinutes;
+    }
 
     public boolean equals(Object o) {
         if (this == o) {
