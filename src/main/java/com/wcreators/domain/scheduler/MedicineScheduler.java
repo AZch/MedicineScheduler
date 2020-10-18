@@ -10,6 +10,8 @@ import com.wcreators.task.Task;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 @EnableScheduling
 @Singleton
@@ -21,8 +23,7 @@ public class MedicineScheduler implements Scheduler {
 
     private final List<ExternalAgent> externalAgents = new ArrayList<>();
 
-    // TODO concurency
-    private final List<Task> tasks = new ArrayList<>();
+    private Map<Integer, Task> tasks = new ConcurrentHashMap<>();
 
     @PostConstruct
     public void init() {
@@ -33,15 +34,13 @@ public class MedicineScheduler implements Scheduler {
     @Override
     public void run() {
         try {
-            tasks.stream()
-                    .filter(Task::isEventHappened)
-                    .forEach(task -> {
-                        System.out.println("eventeckie " + task.toString());
-                        externalAgents.forEach(externalAgent -> {
-                            System.out.println("send to agent " + externalAgent.toString());
-                            externalAgent.sendEvent(task);
-                        });
-                    });
+            tasks.forEach((integer, task) -> {
+                if (task.taskIsDone()) {
+                    tasks.remove(integer);
+                } else if (task.isEventHappened()) {
+                    externalAgents.forEach(agent -> agent.sendEvent(task));
+                }
+            });
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -50,9 +49,9 @@ public class MedicineScheduler implements Scheduler {
     @Override
     public void addTask(Task task) {
         System.out.println("add task " + task.toString());
-        if (tasks.stream().noneMatch(existTask -> existTask.equals(task))) {
+        if (tasks.get(task.hashCode()) == null) {
             System.out.println("added " + task.toString());
-            tasks.add(task);
+            tasks.put(task.hashCode(), task);
             // TODO send event here
         } else {
             System.out.println("already added");

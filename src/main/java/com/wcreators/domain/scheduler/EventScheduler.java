@@ -37,7 +37,7 @@ public class EventScheduler implements Scheduler {
         userMedicineDao
                 .getNear(interval)
                 .forEach(userMedicine -> schedulers
-                        .forEach(scheduler -> scheduler.addTask(new UserMedicineTask(userMedicine)))
+                        .forEach(scheduler -> scheduler.addTask(UserMedicineTask.builder().task(userMedicine).build()))
                 );
     }
 

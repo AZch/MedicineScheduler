@@ -9,6 +9,7 @@ import javax.persistence.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 @Entity
 @Table(name = "UserMedicine")
@@ -81,7 +82,15 @@ public class UserMedicine {
 //                executionTimes.equals(that.executionTimes);
     }
 
+    // not use execute times here for correct has set
     public int hashCode() {
-        return Objects.hash(pk.hashCode(), executionType, notifyEveryMinutes, executionTimes);
+        return Objects.hash(pk.hashCode(), executionType, notifyEveryMinutes);
+    }
+
+    public void updateExecutionTimes(int moreThenSeconds) {
+        executionTimes = executionTimes
+                .stream()
+                .filter(executionTime -> executionTime < moreThenSeconds)
+                .map(executionTime -> executionTime + notifyEveryMinutes * 60).collect(Collectors.toList());
     }
 }

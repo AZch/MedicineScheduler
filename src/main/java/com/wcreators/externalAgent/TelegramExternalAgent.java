@@ -18,12 +18,17 @@ import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.TelegramBotsApi;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Update;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 import static org.telegram.abilitybots.api.util.AbilityUtils.getChatId;
@@ -50,6 +55,8 @@ public class TelegramExternalAgent extends TelegramLongPollingBot implements Ext
     @InjectByType
     private UserMedicineDao userMedicineDao;
 
+    private final Map<Integer, Task> processingTask = new ConcurrentHashMap<>();
+
     @PostConstruct
     @SneakyThrows
     public void init() {
@@ -63,11 +70,23 @@ public class TelegramExternalAgent extends TelegramLongPollingBot implements Ext
 
     @Override
     public void sendEvent(Task task) {
-        try {
-            execute(new SendMessage().setChatId(task.sendTo()).setText("pie " + task.toString()));
-        } catch (TelegramApiException e) {
-            e.printStackTrace();
-        }
+        Arrays.stream(task.agentIdsByType(AgentType.telegram)).forEach(agentId -> {
+            try {
+                List<List<InlineKeyboardButton>> rowList = new ArrayList<>();
+                List<InlineKeyboardButton> keyboardButtonRow = new ArrayList<>();
+                keyboardButtonRow.add(new InlineKeyboardButton().setText("Done").setCallbackData(String.valueOf(task.hashCode())));
+                processingTask.put(task.hashCode(), task);
+                rowList.add(keyboardButtonRow);
+                execute(
+                    new SendMessage()
+                        .setChatId(agentId)
+                        .setText("It's time to " + task.toString())
+                        .setReplyMarkup(new InlineKeyboardMarkup().setKeyboard(rowList))
+                );
+            } catch (TelegramApiException e) {
+                e.printStackTrace();
+            }
+        });
     }
 
     private boolean registrationUser(String email, String firstName, String lastName, Long chatId) {
@@ -123,6 +142,19 @@ public class TelegramExternalAgent extends TelegramLongPollingBot implements Ext
 
             try {
                 execute(message);
+            } catch (TelegramApiException e) {
+                e.printStackTrace();
+            }
+        } else if(update.hasCallbackQuery()){
+            int hashCode = Integer.parseInt(update.getCallbackQuery().getData());
+            Task task = processingTask.get(hashCode);
+            task.done();
+            try {
+                execute(
+                    new SendMessage()
+                        .setText("Ok Boss")
+                        .setChatId(update.getCallbackQuery().getMessage().getChatId())
+                );
             } catch (TelegramApiException e) {
                 e.printStackTrace();
             }

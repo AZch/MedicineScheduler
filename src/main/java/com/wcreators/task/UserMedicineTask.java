@@ -1,25 +1,41 @@
 package com.wcreators.task;
 
+import com.wcreators.db.entities.agent.AgentType;
 import com.wcreators.db.entities.userMedicine.UserMedicine;
-import lombok.AllArgsConstructor;
+import lombok.Builder;
 
 import java.time.LocalTime;
 import java.util.Objects;
 
-@AllArgsConstructor
+@Builder
 public class UserMedicineTask implements Task {
     private final UserMedicine task;
+    @Builder.Default
+    private boolean isDone = false;
 
     @Override
     public boolean isEventHappened() {
-        System.out.println("check event " + toString());
         Integer nowSeconds = LocalTime.now().toSecondOfDay();
-        return task.getExecutionTimes().stream().anyMatch(executionTime -> executionTime > nowSeconds);
+        boolean isHappened = task.getExecutionTimes().stream().anyMatch(executionTime -> executionTime < nowSeconds);
+        if (isHappened) {
+            task.updateExecutionTimes(nowSeconds);
+        }
+        return isHappened;
     }
 
     @Override
-    public Long sendTo() {
-        return task.getUser().getAgents().iterator().next().getAgentId();
+    public void done() {
+        isDone = true;
+    }
+
+    @Override
+    public boolean taskIsDone() {
+        return isDone;
+    }
+
+    @Override
+    public Long[] agentIdsByType(AgentType type) {
+        return task.getUser().agentIdsByType(type);
     }
 
     @Override
@@ -43,6 +59,4 @@ public class UserMedicineTask implements Task {
     public String toString() {
         return task.getMedicine().getTitle();
     }
-
-
 }
