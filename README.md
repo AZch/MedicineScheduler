@@ -9,5 +9,5 @@
 
 ## application.properties
 TELEGRAM_API_TOKEN - token from your tg bot  
-TELEGRAM_BOT_USERNAME - name from your tg bot
-SCHEDULE_INTERVAL - time interval in seconds for your scheduled class
+TELEGRAM_BOT_USERNAME - name from your tg bot  
+SCHEDULE_INTERVAL - time interval in seconds for your scheduled class  
