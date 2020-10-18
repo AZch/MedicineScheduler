@@ -20,10 +20,9 @@ public class User {
     @Id
     @GeneratedValue
     @Column(name = "userId", nullable = false)
-    @Basic
     @Setter
     @Getter
-    private UUID userId;
+    private Integer userId;
 
     @NaturalId
     @Column(name = "email", unique = true, nullable = false, length = 256)

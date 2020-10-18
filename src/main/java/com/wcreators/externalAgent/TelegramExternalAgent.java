@@ -24,11 +24,9 @@ import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static org.telegram.abilitybots.api.util.AbilityUtils.getChatId;
@@ -55,6 +53,12 @@ public class TelegramExternalAgent extends TelegramLongPollingBot implements Ext
     @InjectByType
     private UserMedicineDao userMedicineDao;
 
+    private final Function<String, String> makeSelectCallbackData = title -> "/select\n" + title;
+    private final Function<String, String> makeEditCallbackData = title -> "/edit\n" + title;
+    private final Function<String, String> makeDeleteCallbackData = title -> "/delete\n" + title;
+    private final Function<Task, String> makeDoneCallbackData = task -> "/done\n" + task.hashCode();
+    private final Function<String, String[]> getArgumentsFromCommand = command -> command.split("\n");
+
     private final Map<Integer, Task> processingTask = new ConcurrentHashMap<>();
 
     @PostConstruct
@@ -72,16 +76,20 @@ public class TelegramExternalAgent extends TelegramLongPollingBot implements Ext
     public void sendEvent(Task task) {
         Arrays.stream(task.agentIdsByType(AgentType.telegram)).forEach(agentId -> {
             try {
-                List<List<InlineKeyboardButton>> rowList = new ArrayList<>();
-                List<InlineKeyboardButton> keyboardButtonRow = new ArrayList<>();
-                keyboardButtonRow.add(new InlineKeyboardButton().setText("Done").setCallbackData(String.valueOf(task.hashCode())));
+                List<List<InlineKeyboardButton>> rows = new ArrayList<>();
+                List<InlineKeyboardButton> row = new ArrayList<>();
+                row.add(
+                    new InlineKeyboardButton()
+                        .setText("Done")
+                        .setCallbackData(makeDoneCallbackData.apply(task))
+                );
                 processingTask.put(task.hashCode(), task);
-                rowList.add(keyboardButtonRow);
+                rows.add(row);
                 execute(
                     new SendMessage()
                         .setChatId(agentId)
                         .setText("It's time to " + task.toString())
-                        .setReplyMarkup(new InlineKeyboardMarkup().setKeyboard(rowList))
+                        .setReplyMarkup(new InlineKeyboardMarkup().setKeyboard(rows))
                 );
             } catch (TelegramApiException e) {
                 e.printStackTrace();
@@ -124,13 +132,11 @@ public class TelegramExternalAgent extends TelegramLongPollingBot implements Ext
 
     @Override
     public void onUpdateReceived(Update update) {
+        Long chatId = getChatId(update);
+        SendMessage message = new SendMessage().setChatId(chatId);
         if (update.hasMessage() && update.getMessage().hasText()) {
-            Long chatId = getChatId(update);
             org.telegram.telegrambots.meta.api.objects.User tgUser = getUser(update);
-            String[] arguments = update.getMessage().getText().split("\n");
-            SendMessage message = new SendMessage()
-                    .setChatId(update.getMessage().getChatId());
-
+            String[] arguments = getArgumentsFromCommand.apply(update.getMessage().getText());
             switch (arguments[0]) {
                 case "/reg":
                     message.setText(reg(chatId, tgUser.getFirstName(), tgUser.getLastName(), arguments));
@@ -138,27 +144,96 @@ public class TelegramExternalAgent extends TelegramLongPollingBot implements Ext
                 case "/add":
                     message.setText(add(chatId, arguments));
                     break;
+                case "/all":
+                    message.setText(allText()).setReplyMarkup(allReplayMarkup(chatId));
+                    break;
+//                case "/edit":
+//                    message.setText(edit(chatId, arguments));
+//                    break;
+//                case "/del":
+//                    message.setText(del(chatId, arguments));
+//                    break;
+                default:
+                    message.setText("Sorry, command not exist");
             }
-
-            try {
-                execute(message);
-            } catch (TelegramApiException e) {
-                e.printStackTrace();
-            }
-        } else if(update.hasCallbackQuery()){
-            int hashCode = Integer.parseInt(update.getCallbackQuery().getData());
-            Task task = processingTask.get(hashCode);
-            task.done();
-            try {
-                execute(
-                    new SendMessage()
-                        .setText("Ok Boss")
-                        .setChatId(update.getCallbackQuery().getMessage().getChatId())
-                );
-            } catch (TelegramApiException e) {
-                e.printStackTrace();
+        } else if(update.hasCallbackQuery()) {
+            String[] arguments = getArgumentsFromCommand.apply(update.getCallbackQuery().getData());
+            switch (arguments[0]) {
+                case "/done":
+                    message.setText(doneCallbackCommand(arguments));
+                    break;
+                case "/select":
+                    if (arguments.length < 2) {
+                        message.setText("data inconsistency");
+                        break;
+                    }
+                    List<List<InlineKeyboardButton>> rows = new ArrayList<>();
+                    List<InlineKeyboardButton> row = new ArrayList<>();
+                    row.add(new InlineKeyboardButton().setText("Edit").setCallbackData(makeEditCallbackData.apply(arguments[1])));
+                    row.add(new InlineKeyboardButton().setText("Delete").setCallbackData(makeDeleteCallbackData.apply(arguments[1])));
+                    rows.add(row);
+                    message
+                        .setText("Selected: " + arguments[1])
+                        .setReplyMarkup(new InlineKeyboardMarkup().setKeyboard(rows));
+                    break;
+                case "/edit":
+                    if (arguments.length < 2) {
+                        message.setText("data inconsistency");
+                        break;
+                    }
+                    message.setText("Enter all:\n/edit\nold name\nnew name\nnew time\n");
+                    break;
+                case "/delete":
+                    if (arguments.length < 2) {
+                        message.setText("data inconsistency");
+                        break;
+                    }
+                    medicineDao.delete(arguments[1], chatId, AgentType.telegram);
+                    message.setText("Ok Boss");
+                    break;
+                default:
             }
         }
+        try {
+            execute(message);
+        } catch (TelegramApiException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private String allText() {
+        return "Your available medicine list:";
+    }
+
+    private String doneCallbackCommand(String[] arguments) {
+        // 1 - hash code of task object
+        if (arguments.length < 2) {
+            return "data inconsistency";
+        }
+        int hashCode = Integer.parseInt(arguments[1]);
+        Task task = processingTask.get(hashCode);
+        task.done();
+        return "Ok Boss";
+    }
+
+    private InlineKeyboardMarkup allReplayMarkup(Long chatId) {
+        List<List<InlineKeyboardButton>> rows = new ArrayList<>();
+        List<Medicine> medicines = medicineDao.getMedicineListByUserAgent(AgentType.telegram, chatId);
+        for (int i = 0; i < medicines.size(); i += 3) {
+            List<InlineKeyboardButton> row = new ArrayList<>();
+            for (int j = i; j < medicines.size() && j < i + 3; j++) {
+                Medicine medicine = medicines.get(j);
+                row.add(
+                    new InlineKeyboardButton()
+                        .setText(medicine.getTitle())
+                        .setCallbackData(
+                            makeSelectCallbackData.apply(medicine.getTitle())
+                        )
+                );
+            }
+            rows.add(row);
+        }
+        return new InlineKeyboardMarkup(rows);
     }
 
     private String reg(Long chatId, String firstName, String lastName, String[] args) {

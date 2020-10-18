@@ -22,7 +22,7 @@ public class Medicine {
     @Basic
     @Setter
     @Getter
-    private UUID medicineId;
+    private Integer medicineId;
 
     @NaturalId
     @Column(name = "title", nullable = false, unique = true, length = 256)
