@@ -1,6 +1,7 @@
 package com.wcreators.db.entities;
 
 import com.wcreators.db.entities.agent.Agent;
+import com.wcreators.db.entities.agent.AgentType;
 import com.wcreators.db.entities.userMedicine.UserMedicine;
 import lombok.*;
 import org.hibernate.annotations.*;
@@ -19,10 +20,9 @@ public class User {
     @Id
     @GeneratedValue
     @Column(name = "userId", nullable = false)
-    @Basic
     @Setter
     @Getter
-    private UUID userId;
+    private Integer userId;
 
     @NaturalId
     @Column(name = "email", unique = true, nullable = false, length = 256)
@@ -58,6 +58,19 @@ public class User {
     @Getter
     @Singular
     private Set<Agent> agents;
+
+    public Long[] agentIdsByType(AgentType type) {
+        if (type.equals(AgentType.telegram)) {
+            return agents
+                    .stream()
+                    .filter(agent -> agent
+                            .getAgentType()
+                            .equals(AgentType.telegram))
+                    .map(Agent::getAgentId)
+                    .toArray(Long[]::new);
+        }
+        return new Long[0];
+    }
 
     @Override
     public boolean equals(Object o) {

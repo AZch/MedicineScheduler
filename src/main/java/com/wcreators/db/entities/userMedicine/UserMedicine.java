@@ -6,9 +6,11 @@ import lombok.Getter;
 import lombok.Setter;
 
 import javax.persistence.*;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 @Entity
 @Table(name = "UserMedicine")
@@ -57,6 +59,15 @@ public class UserMedicine {
         getPk().setMedicine(medicine);
     }
 
+    @Override
+    public String toString() {
+        String executionTimesString = executionTimes
+                .stream()
+                .map(executionTime -> LocalTime.ofSecondOfDay(executionTime).toString())
+                .collect(Collectors.joining(" "));
+        return "Times: " + executionTimesString +
+                "\nNotify Every: " + notifyEveryMinutes;
+    }
 
     public boolean equals(Object o) {
         if (this == o) {
@@ -81,7 +92,15 @@ public class UserMedicine {
 //                executionTimes.equals(that.executionTimes);
     }
 
+    // not use execute times here for correct has set
     public int hashCode() {
-        return Objects.hash(pk.hashCode(), executionType, notifyEveryMinutes, executionTimes);
+        return Objects.hash(pk.hashCode(), executionType, notifyEveryMinutes);
+    }
+
+    public void updateExecutionTimes(int moreThenSeconds) {
+        executionTimes = executionTimes
+                .stream()
+                .filter(executionTime -> executionTime < moreThenSeconds)
+                .map(executionTime -> executionTime + notifyEveryMinutes * 60).collect(Collectors.toList());
     }
 }
