@@ -4,9 +4,9 @@ import com.wcreators.common.ApplicationContext;
 import com.wcreators.common.annotations.InjectProperty;
 import lombok.SneakyThrows;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
+import java.io.*;
 import java.lang.reflect.Field;
+import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Stream;
@@ -18,8 +18,8 @@ public class InjectPropertyAnnotationObjectConfigurator implements ObjectConfigu
 
     @SneakyThrows
     public InjectPropertyAnnotationObjectConfigurator() {
-        String path = Objects.requireNonNull(ClassLoader.getSystemClassLoader().getResource("application.properties")).getPath();
-        Stream<String> lines = new BufferedReader(new FileReader(path)).lines();
+        InputStream stream = ClassLoader.getSystemClassLoader().getResourceAsStream("application.properties");
+        Stream<String> lines = new BufferedReader(new InputStreamReader(stream, StandardCharsets.UTF_8)).lines();
         propertiesMap = lines.map(line -> line.split("=")).collect(toMap(arr -> arr[0].trim(), arr -> arr[1].trim()));
     }
 
