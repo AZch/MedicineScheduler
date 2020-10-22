@@ -40,7 +40,7 @@ public class MedicineDao {
         }
     }
 
-    // TODO move to usermedicine dao
+    // TODO move to usermedicine dao (set flag as deleted)
     public boolean delete(String title, Long agentId, AgentType type) {
         try {
             Session session = utils.getSessionFactory().openSession();
